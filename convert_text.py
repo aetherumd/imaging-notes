@@ -66,4 +66,4 @@ def convert_to_text(filepath,
 
     return file_name
 
-convert_to_text('data/output_00273/info_00273.txt')
+convert_to_text('/mnt/sim/output_00273/info_00273.txt')
