@@ -4,8 +4,35 @@ import pandas as pd
 from yt import load
 from library.filter_tools import create_multiple_filter_files
 
+def _add_ramses_alias_fields(ds):
+    """Create common RAMSES aliases when only hydro_* fields are present."""
+    available = set(ds.field_list) | set(ds.derived_field_list)
+
+    alias_map = {
+        ("ramses", "Pressure"): ("ramses", "hydro_thermal_pressure"),
+        ("ramses", "xHI"): ("ramses", "hydro_xHI"),
+        ("ramses", "xHII"): ("ramses", "hydro_xHII"),
+        ("ramses", "xHeII"): ("ramses", "hydro_xHeII"),
+        ("ramses", "xHeIII"): ("ramses", "hydro_xHeIII"),
+    }
+
+    for target_field, source_field in alias_map.items():
+        if target_field in available or source_field not in available:
+            continue
+
+        def _alias(field, data, src=source_field):
+            return data[src]
+
+        ds.add_field(
+            target_field,
+            function=_alias,
+            sampling_type="cell",
+            units="1",
+            force_override=True,
+        )
+
 # function to prepare simulation data
-def prepare_simulation_data(input_path, cell_fields = None, epf = None, 
+def prepare_simulation_data(input_path, epf = None, 
                             filter_path = None, z = 10, 
                             filter_dir = None, wl_initial = None, 
                             wl_final = None, num_bins = 20, 
@@ -41,13 +68,6 @@ def prepare_simulation_data(input_path, cell_fields = None, epf = None,
     if filter_dir is None:
         filter_dir = os.path.join(os.getcwd(), "filter_bins")
 
-    # default fields
-    if cell_fields is None:
-        cell_fields = [
-            "Density", "x-velocity", "y_velocity", "z-velocity", "Pressure",
-            "Metallicity", "xHI", "xHII", "xHeII", "xHeIII"
-        ]
-
     if epf is None:
         epf = [
             ("particle_family", "b"),
@@ -57,8 +77,10 @@ def prepare_simulation_data(input_path, cell_fields = None, epf = None,
         ]
 
     # load dataset
-    ds = load(input_path, fields = cell_fields, extra_particle_fields = epf, default_species_fields = "ionized")
+    ds = load(input_path, extra_particle_fields = epf, default_species_fields = "ionized")
+    _add_ramses_alias_fields(ds)
     ad = ds.all_data()
+    z = ds.current_redshift
 
     # star particle positions
     x_pos = np.array(ad["star", "particle_position_x"])
@@ -120,7 +142,7 @@ def prepare_simulation_data(input_path, cell_fields = None, epf = None,
         output_filter = np.array(output_filter)
 
     # use the filter you have
-    elif filter_path == "F200W_filter.txt": 
+    else: 
         if not os.path.isfile(filter_path):
             raise FileNotFoundError(f"Filter file '{filter_path}' does not exist.")
 
@@ -131,9 +153,6 @@ def prepare_simulation_data(input_path, cell_fields = None, epf = None,
         output_filter = df_filter["Output"].values
         
         print(f"Filter wavelength range: {wavelength_filter_shifted.min():.1f}-{wavelength_filter_shifted.max():.1f} Å")
-
-    else:
-        raise ValueError(f"Invalid filter_path '{filter_path}'.")
 
     plt_wdth = 400  # plot width in parsecs for visualization
 
