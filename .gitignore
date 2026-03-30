@@ -1,3 +1,4 @@
 constants.py
 continuum_single
 __pycache__
+*.png
