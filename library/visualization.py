@@ -44,9 +44,9 @@ def create_projection_plot(ds, field_name, ctr_at_code, plt_wdth = 400, plot_uni
     elif plot_units == "jy_arcsec2":
         flux_per_A = flux_data / delta_wl
         sb = flux_to_surface_brightness(flux_per_A, z = z)
-        plot_data = np.log10(sb) + 9
-        colorbar_label = "log10(nJy arcsec$^{-2}$)"
-        cmap = "viridis"
+        plot_data = np.log10(sb)
+        colorbar_label = "log10(Jy arcsec$^{-2}$)"
+        cmap = "bone"
     elif plot_units == "magnitude_arcsec2":
         flux_per_A = flux_data / delta_wl
         sb = flux_to_surface_brightness(flux_per_A, z = z)
@@ -71,7 +71,7 @@ def create_projection_plot(ds, field_name, ctr_at_code, plt_wdth = 400, plot_uni
     plt.colorbar(im, label = colorbar_label)
     plt.show()
 
-    return None
+    return plot_data
 
 # function to visualize phase plot
 def create_phase_plot(ad, x_field = "density", y_field = "temperature", z_field = "flux_total", x_bins = None, y_bins = None, weight_field = None):

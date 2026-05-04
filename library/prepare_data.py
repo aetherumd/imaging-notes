@@ -33,7 +33,7 @@ def _add_ramses_alias_fields(ds):
 
 # function to prepare simulation data
 def prepare_simulation_data(input_path, epf = None, 
-                            filter_path = None, z = 10, 
+                            filter_path = None, 
                             filter_dir = None, wl_initial = None, 
                             wl_final = None, num_bins = 20, 
                             jwst_filter_file = "F200W_filter.txt"):
